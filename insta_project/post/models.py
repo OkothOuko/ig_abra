@@ -1,5 +1,5 @@
-from django.db import models
 import uuid
+from django.db import models
 from django.contrib.auth.models import User
 
 
@@ -36,9 +36,13 @@ class Tag(models.Model):
 			self.slug = slugify(self.title)
 		return super().save(*args, **kwargs)
 
+class PostFileContent(models.Model):
+	user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='content_owner')
+	file = models.FileField(upload_to=user_directory_path)
+
 class Post(models.Model):
 	id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-	picture =  models.ImageField(upload_to=user_directory_path, verbose_name='Picture', null=False)
+	content =  models.ManyToManyField(PostFileContent, related_name='contents')
 	caption = models.TextField(max_length=1500, verbose_name='Caption')
 	posted = models.DateTimeField(auto_now_add=True)
 	tags = models.ManyToManyField(Tag, related_name='tags')
@@ -116,4 +120,3 @@ post_delete.connect(Likes.user_unlike_post, sender=Likes)
 #Follow
 post_save.connect(Follow.user_follow, sender=Follow)
 post_delete.connect(Follow.user_unfollow, sender=Follow)
-# Create your models here.
